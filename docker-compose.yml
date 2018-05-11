@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+
+  proxy:
+    restart: always
+    # build: ./nginx/
+    image: jwilder/nginx-proxy
+    depends_on:
+      - db
+      - api
+    ports:
+      - "80:80"
+    volumes:
+    #  - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - default
+
+  whoami:
+    image: jwilder/whoami
+    environment:
+      - VIRTUAL_HOST=whoami.local
+
+  api:
+    build: 
+      context: ../
+      dockerfile: ./docker/back/Dockerfile
+    volumes:
+      - "../../back:/src/app"
+    ports:
+      - 3000:3000
+    networks:
+      - default
+
+  db:
+    image: mongo:latest
+    ports:
+      - '27017:27017'
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
